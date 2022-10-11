@@ -5,7 +5,6 @@
 
 int main(void) {
     Game::MainWindow window;
-    window.show();
 
-    return Fl::run();
+    return window.play();
 }
