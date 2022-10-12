@@ -20,26 +20,21 @@ int Game::MainWindow::play() {
 }
 
 int Game::MainWindow::handle(int event) {
-    switch (event) {
-        case FL_KEYDOWN:
-            switch (Fl::event_key()) {
-                case FL_Up:
-                    moveUp();
-                    break;
-                case FL_Down:
-                    moveDown();
-                    break;
-                case FL_Left:
-                    moveLeft();
-                    break;
-                case FL_Right:
-                    moveRight();
-                    break;
-            }
-            return 1;
-        default:
-            return Fl_Window::handle(event);
+    if (event != FL_KEYDOWN) {
+        return Fl_Window::handle(event);
     }
+
+    if (Fl::event_key() == FL_Up) {
+        moveUp();
+    } else if (Fl::event_key() == FL_Down) {
+        moveDown();
+    } else if (Fl::event_key() == FL_Left) {
+        moveLeft();
+    } else if (Fl::event_key() == FL_Right) {
+        moveRight();
+    }
+
+    return 1;
 }
 
 void Game::MainWindow::moveUp() {
