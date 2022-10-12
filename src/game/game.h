@@ -62,23 +62,132 @@ namespace Game {
             return 1;
         }
 
+        void printBoard() {
+            for (int i = 0; i < GRID_SIZE; i++) {
+                for (int j = 0; j < GRID_SIZE; j++) {
+                    std::cout << board[i][j] << " ";
+                }
+                std::cout << std::endl;
+            }
+            std::cout << std::endl;
+        }
+
         void moveUp() {
+            // start at 1 to remove top layer
+            for (int i = 1; i < GRID_SIZE; i++) {
+                for (int j = 0; j < GRID_SIZE; j++) {
+                    if (board[i][j] == 0) {
+                        continue;
+                    }
+
+                    // move up until we hit a tile or the top
+                    for (int k = i; k > 0; k--) {
+                        if (board[k - 1][j] == 0) {
+                            board[k - 1][j] = board[k][j];
+                            board[k][j] = 0;
+                        } else if (board[k - 1][j] == board[k][j]) {
+                            board[k - 1][j] *= 2;
+                            board[k][j] = 0;
+                            break;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+
             spawnTile();
             redraw();
         }
 
         void moveDown() {
+            // go to GRID_SIZE - 1 to remove last layer
+            for (int i = 0; i < GRID_SIZE - 1; i++) {
+                for (int j = 0; j < GRID_SIZE; j++) {
+                    if (board[i][j] == 0) {
+                        continue;
+                    }
+
+                    // move down until we hit a tile or the bottom
+                    for (int k = i; k < GRID_SIZE; k++) {
+                        if (board[k + 1][j] == 0) {
+                            board[k + 1][j] = board[k][j];
+                            board[k][j] = 0;
+                        } else if (board[k + 1][j] == board[k][j]) {
+                            board[k + 1][j] *= 2;
+                            board[k][j] = 0;
+                            break;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            spawnTile();
+            redraw();
         }
 
         void moveLeft() {
+            for (int i = 0; i < GRID_SIZE; i++) {
+                // start at 1 to remove right side
+                for (int j = 1; j < GRID_SIZE; j++) {
+                    if (board[i][j] == 0) {
+                        continue;
+                    }
+
+                    // move left until we hit a tile or the left
+                    for (int k = j; k > 0; k--) {
+                        if (board[i][k - 1] == 0) {
+                            board[i][k - 1] = board[i][k];
+                            board[i][k] = 0;
+                        } else if (board[i][k - 1] == board[i][k]) {
+                            board[i][k - 1] *= 2;
+                            board[i][k] = 0;
+                            break;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            spawnTile();
+            redraw();
         }
 
         void moveRight() {
+            for (int i = 0; i < GRID_SIZE; i++) {
+                // go to GRID_SIZE - 1 to remove the left side
+                for (int j = 0; j < GRID_SIZE - 1; j++) {
+                    if (board[i][j] == 0) {
+                        continue;
+                    }
+
+                    // move right until we hit a tile or the right
+                    for (int k = j; k < GRID_SIZE; k++) {
+                        if (board[i][k + 1] == 0) {
+                            board[i][k + 1] = board[i][k];
+                            board[i][k] = 0;
+                        } else if (board[i][k + 1] == board[i][k]) {
+                            board[i][k + 1] *= 2;
+                            board[i][k] = 0;
+                            break;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            spawnTile();
+            redraw();
         }
 
         void draw() override {
-            for (int i = 0; i < GRID_SIZE; ++i) {
-                for (int j = 0; j < GRID_SIZE; ++j) {
+            Fl_Window::draw();
+            for (int i = 0; i < GRID_SIZE; i++) {
+                for (int j = 0; j < GRID_SIZE; j++) {
                     drawTile(i, j);
                     drawGrid();
                 }
@@ -124,13 +233,30 @@ namespace Game {
             fl_rect(0, 0, WIDTH, WIDTH);
             fl_line_style(FL_SOLID, THICKNESS);
 
-            for (int i = 1; i < GRID_SIZE; ++i) {
+            for (int i = 1; i < GRID_SIZE; i++) {
                 fl_line(100 * i, 0, 100 * i, WIDTH);
                 fl_line(0, 100 * i, WIDTH, 100 * i);
             }
         }
 
+        bool isFull() {
+            for (int i = 0; i < GRID_SIZE; i++) {
+                for (int j = 0; j < GRID_SIZE; j++) {
+                    if (board[i][j] == 0) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
         void spawnTile() {
+            // if the boards full then return
+            if (isFull()) {
+                return;
+            }
+
             int x = rand() % GRID_SIZE;
             int y = rand() % GRID_SIZE;
             int value = rand() % 2 == 0 ? 2 : 4;
