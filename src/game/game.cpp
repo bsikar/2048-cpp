@@ -1,17 +1,14 @@
-#include <FL/Fl.H>
-#include <array>
-#include <FL/fl_draw.H>
-#include <FL/Fl_Window.H>
-#include <iostream>
-#include <iomanip>
-#include <cmath>
-#include <vector>
-#include <random>
-#include <algorithm>
 #include "game.h"
 
 Game::MainWindow::MainWindow() : Fl_Window(WIDTH, HEIGHT, "2048") {
     color(BACKGROUND_COLOR);
+    // fill emptyTiles
+    for (auto i = 0; i < GRID_ROWS; i++) {
+        for (auto j = 0; j < GRID_COLS; j++) {
+            emptyTiles.push_back({i, j});
+        }
+    }
+
     // initialize the board with two random tiles
     spawnTile();
     spawnTile();
@@ -146,7 +143,6 @@ void Game::MainWindow::moveRight() {
 }
 
 void Game::MainWindow::spawnTile() {
-    std::vector<std::pair<int, int>> emptyTiles;
     for (auto row = 0; row < GRID_ROWS; ++row) {
         for (auto col = 0; col < GRID_COLS; ++col) {
             if (board[row][col] == 0) {
@@ -159,11 +155,21 @@ void Game::MainWindow::spawnTile() {
         return;
     }
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, emptyTiles.size() - 1);
-    auto tile = emptyTiles[dis(gen)];
-    board[tile.first][tile.second] = 2;
+    int value = rand() % 2 == 0 ? 2 : 4;
+
+    // get a random row and column thats in emptyTile
+    std::vector<std::pair<int, int>> pair;
+    std::sample(
+        emptyTiles.begin(),
+        emptyTiles.end(),
+        std::back_inserter(pair),
+        1,
+        std::mt19937{ std::random_device{}() }
+    );
+    auto x = pair[0].first;
+    auto y = pair[0].second;
+
+    board[x][y] = value;
 }
 
 void Game::MainWindow::draw() {
@@ -178,7 +184,6 @@ void Game::MainWindow::draw() {
 }
 
 void Game::MainWindow::drawTile(int i, int j) {
-    Fl_Color color;
     auto boardValue = board[i][j];
     if (boardValue == 0) {
         return;
@@ -188,7 +193,7 @@ void Game::MainWindow::drawTile(int i, int j) {
     // this is because the value doubles every time you merge
     // so the color should also double
     auto colorIndex = static_cast<int>(log2(boardValue));
-    color = TILE_COLORS[colorIndex];
+    auto color = TILE_COLORS[colorIndex];
 
     fl_color(color);
     fl_rectf(
@@ -216,8 +221,8 @@ void Game::MainWindow::drawGrid() {
     fl_rect(0, 0, WIDTH, HEIGHT);
     fl_line_style(FL_SOLID, THICKNESS);
 
-    for (int i = 1; i < GRID_ROWS; i++) {
-        for (int j = 1; j < GRID_COLS; j++) {
+    for (auto i = 1; i < GRID_ROWS; i++) {
+        for (auto j = 1; j < GRID_COLS; j++) {
             fl_line(100 * j, 0, 100 * j, HEIGHT);
             fl_line(0, 100 * i, WIDTH, 100 * i);
         }
@@ -225,8 +230,8 @@ void Game::MainWindow::drawGrid() {
 }
 
 void Game::MainWindow::printBoard() {
-    for (int i = 0; i < GRID_ROWS; i++) {
-        for (int j = 0; j < GRID_COLS; j++) {
+    for (auto i = 0; i < GRID_ROWS; i++) {
+        for (auto j = 0; j < GRID_COLS; j++) {
             std::cout << std::setw(4) << board[i][j] << " ";
         }
         std::cout << std::endl;
