@@ -4,13 +4,19 @@
 #include <FL/fl_draw.H>
 #include <FL/Fl_Window.H>
 #include <iostream>
+#include <iomanip>
 #include <cmath>
+#include <vector>
+#include <random>
+#include <algorithm>
 
-const auto WIDTH = 400;
-const auto THICKNESS = 5;
-const auto GRID_SIZE = 4;
-const auto BACKGROUND_COLOR = 0x171717;
-const auto LINE_COLOR = 0x2F2F2F;
+static constexpr auto GRID_ROWS = 4;
+static constexpr auto GRID_COLS = 4;
+static constexpr auto WIDTH = 100 * GRID_COLS;
+static constexpr auto HEIGHT = 100 * GRID_ROWS;
+static constexpr auto THICKNESS = 5;
+static constexpr auto BACKGROUND_COLOR = 0x171717;
+static constexpr auto LINE_COLOR = 0x2F2F2F;
 
 // there are 11 possible tile colors
 const std::array<Fl_Color, 11> TILE_COLORS = {
@@ -31,9 +37,14 @@ const std::array<Fl_Color, 11> TILE_COLORS = {
 namespace Game {
     class MainWindow : public Fl_Window {
     public:
-        MainWindow() : Fl_Window(WIDTH, WIDTH, WIDTH, WIDTH, "2048") {
+        MainWindow() : Fl_Window(WIDTH, HEIGHT, "2048") {
             this->color(BACKGROUND_COLOR);
-            srand(time(NULL));
+            // fill emptyTiles
+            for (int i = 0; i < GRID_ROWS; i++) {
+                for (int j = 0; j < GRID_COLS; j++) {
+                    emptyTiles.push_back({i, j});
+                }
+            }
         }
 
         int play() {
@@ -43,7 +54,8 @@ namespace Game {
         }
 
     private:
-        std::array<std::array<int, GRID_SIZE>, GRID_SIZE> board = {{{0}}};
+        std::array<std::array<int, GRID_COLS>, GRID_ROWS> board = {{{0}}};
+        std::vector<std::pair<int, int>> emptyTiles;
 
         int handle(int event) override {
             if (event == FL_KEYDOWN) {
@@ -62,36 +74,25 @@ namespace Game {
             return 1;
         }
 
-        void printBoard() {
-            for (int i = 0; i < GRID_SIZE; i++) {
-                for (int j = 0; j < GRID_SIZE; j++) {
-                    std::cout << board[i][j] << " ";
-                }
-                std::cout << std::endl;
-            }
-            std::cout << std::endl;
-        }
-
         void moveUp() {
-            // start at 1 to remove top layer
-            for (int i = 1; i < GRID_SIZE; i++) {
-                for (int j = 0; j < GRID_SIZE; j++) {
-                    if (board[i][j] == 0) {
+            for (int i = 0; i < GRID_COLS; i++) {
+                for (int j = 0; j < GRID_ROWS; j++) {
+                    if (board[j][i] == 0) {
                         continue;
                     }
-
-                    // move up until we hit a tile or the top
-                    for (int k = i; k > 0; k--) {
-                        if (board[k - 1][j] == 0) {
-                            board[k - 1][j] = board[k][j];
-                            board[k][j] = 0;
-                        } else if (board[k - 1][j] == board[k][j]) {
-                            board[k - 1][j] *= 2;
-                            board[k][j] = 0;
-                            break;
-                        } else {
-                            break;
-                        }
+                    int k = j;
+                    while (k > 0 && board[k - 1][i] == 0) {
+                        board[k - 1][i] = board[k][i];
+                        board[k][i] = 0;
+                        k--;
+                        addEmptyTile(k + 1, i);
+                        removeEmptyTile(k, i);
+                    }
+                    if (k > 0 && board[k - 1][i] == board[k][i]) {
+                        board[k - 1][i] *= 2;
+                        board[k][i] = 0;
+                        addEmptyTile(k, i);
+                        removeEmptyTile(k + 1, i);
                     }
                 }
             }
@@ -101,25 +102,24 @@ namespace Game {
         }
 
         void moveDown() {
-            // go to GRID_SIZE - 1 to remove last layer
-            for (int i = 0; i < GRID_SIZE - 1; i++) {
-                for (int j = 0; j < GRID_SIZE; j++) {
-                    if (board[i][j] == 0) {
+            for (int i = 0; i < GRID_COLS; i++) {
+                for (int j = GRID_ROWS - 1; j >= 0; j--) {
+                    if (board[j][i] == 0) {
                         continue;
                     }
-
-                    // move down until we hit a tile or the bottom
-                    for (int k = i; k < GRID_SIZE; k++) {
-                        if (board[k + 1][j] == 0) {
-                            board[k + 1][j] = board[k][j];
-                            board[k][j] = 0;
-                        } else if (board[k + 1][j] == board[k][j]) {
-                            board[k + 1][j] *= 2;
-                            board[k][j] = 0;
-                            break;
-                        } else {
-                            break;
-                        }
+                    int k = j;
+                    while (k < GRID_ROWS - 1 && board[k + 1][i] == 0) {
+                        board[k + 1][i] = board[k][i];
+                        board[k][i] = 0;
+                        k++;
+                        addEmptyTile(k - 1, i);
+                        removeEmptyTile(k, i);
+                    }
+                    if (k < GRID_ROWS - 1 && board[k + 1][i] == board[k][i]) {
+                        board[k + 1][i] *= 2;
+                        board[k][i] = 0;
+                        addEmptyTile(k, i);
+                        removeEmptyTile(k - 1, i);
                     }
                 }
             }
@@ -129,25 +129,24 @@ namespace Game {
         }
 
         void moveLeft() {
-            for (int i = 0; i < GRID_SIZE; i++) {
-                // start at 1 to remove right side
-                for (int j = 1; j < GRID_SIZE; j++) {
+            for (int i = 0; i < GRID_ROWS; i++) {
+                for (int j = 0; j < GRID_COLS; j++) {
                     if (board[i][j] == 0) {
                         continue;
                     }
-
-                    // move left until we hit a tile or the left
-                    for (int k = j; k > 0; k--) {
-                        if (board[i][k - 1] == 0) {
-                            board[i][k - 1] = board[i][k];
-                            board[i][k] = 0;
-                        } else if (board[i][k - 1] == board[i][k]) {
-                            board[i][k - 1] *= 2;
-                            board[i][k] = 0;
-                            break;
-                        } else {
-                            break;
-                        }
+                    int k = j;
+                    while (k > 0 && board[i][k - 1] == 0) {
+                        board[i][k - 1] = board[i][k];
+                        board[i][k] = 0;
+                        k--;
+                        addEmptyTile(i, k + 1);
+                        removeEmptyTile(i, k);
+                    }
+                    if (k > 0 && board[i][k - 1] == board[i][k]) {
+                        board[i][k - 1] *= 2;
+                        board[i][k] = 0;
+                        addEmptyTile(i, k);
+                        removeEmptyTile(i, k + 1);
                     }
                 }
             }
@@ -157,25 +156,24 @@ namespace Game {
         }
 
         void moveRight() {
-            for (int i = 0; i < GRID_SIZE; i++) {
-                // go to GRID_SIZE - 1 to remove the left side
-                for (int j = 0; j < GRID_SIZE - 1; j++) {
+            for (int i = 0; i < GRID_ROWS; i++) {
+                for (int j = GRID_COLS - 1; j >= 0; j--) {
                     if (board[i][j] == 0) {
                         continue;
                     }
-
-                    // move right until we hit a tile or the right
-                    for (int k = j; k < GRID_SIZE; k++) {
-                        if (board[i][k + 1] == 0) {
-                            board[i][k + 1] = board[i][k];
-                            board[i][k] = 0;
-                        } else if (board[i][k + 1] == board[i][k]) {
-                            board[i][k + 1] *= 2;
-                            board[i][k] = 0;
-                            break;
-                        } else {
-                            break;
-                        }
+                    int k = j;
+                    while (k < GRID_COLS - 1 && board[i][k + 1] == 0) {
+                        board[i][k + 1] = board[i][k];
+                        board[i][k] = 0;
+                        k++;
+                        addEmptyTile(i, k - 1);
+                        removeEmptyTile(i, k);
+                    }
+                    if (k < GRID_COLS - 1 && board[i][k + 1] == board[i][k]) {
+                        board[i][k + 1] *= 2;
+                        board[i][k] = 0;
+                        addEmptyTile(i, k);
+                        removeEmptyTile(i, k - 1);
                     }
                 }
             }
@@ -184,10 +182,34 @@ namespace Game {
             redraw();
         }
 
+        void printBoard() {
+            for (int i = 0; i < GRID_ROWS; i++) {
+                for (int j = 0; j < GRID_COLS; j++) {
+                    std::cout << std::setw(4) << board[i][j] << " ";
+                }
+                std::cout << std::endl;
+            }
+            std::cout << std::endl;
+        }
+
+        void removeEmptyTile(int row, int col) {
+            for (auto it = emptyTiles.begin(); it != emptyTiles.end(); it++) {
+                if (it->first == row && it->second == col) {
+                    emptyTiles.erase(it);
+                    break;
+                }
+            }
+        }
+
+        void addEmptyTile(int row, int col) {
+            emptyTiles.push_back({row, col});
+        }
+
         void draw() override {
             Fl_Window::draw();
-            for (int i = 0; i < GRID_SIZE; i++) {
-                for (int j = 0; j < GRID_SIZE; j++) {
+            printBoard();
+            for (int i = 0; i < GRID_ROWS; i++) {
+                for (int j = 0; j < GRID_COLS; j++) {
                     drawTile(i, j);
                     drawGrid();
                 }
@@ -230,41 +252,41 @@ namespace Game {
         void drawGrid() {
             fl_color(LINE_COLOR);
             fl_line_style(FL_SOLID, THICKNESS * 2);
-            fl_rect(0, 0, WIDTH, WIDTH);
+            fl_rect(0, 0, WIDTH, HEIGHT);
             fl_line_style(FL_SOLID, THICKNESS);
 
-            for (int i = 1; i < GRID_SIZE; i++) {
-                fl_line(100 * i, 0, 100 * i, WIDTH);
-                fl_line(0, 100 * i, WIDTH, 100 * i);
-            }
-        }
 
-        bool isFull() {
-            for (int i = 0; i < GRID_SIZE; i++) {
-                for (int j = 0; j < GRID_SIZE; j++) {
-                    if (board[i][j] == 0) {
-                        return false;
-                    }
+            for (int i = 1; i < GRID_ROWS; i++) {
+                for (int j = 1; j < GRID_COLS; j++) {
+                    fl_line(100 * j, 0, 100 * j, HEIGHT);
+                    fl_line(0, 100 * i, WIDTH, 100 * i);
                 }
             }
-
-            return true;
         }
 
         void spawnTile() {
             // if the boards full then return
-            if (isFull()) {
+            if (emptyTiles.empty()) {
                 return;
             }
 
-            int x = rand() % GRID_SIZE;
-            int y = rand() % GRID_SIZE;
             int value = rand() % 2 == 0 ? 2 : 4;
-            // if the tile is already occupied, try again
-            if (board[x][y] != 0) {
-                spawnTile();
-                return;
-            }
+
+            // get a random row and column thats in emptyTile
+            std::vector<std::pair<int, int>> pair;
+            std::sample(
+                emptyTiles.begin(),
+                emptyTiles.end(),
+                std::back_inserter(pair),
+                1,
+                std::mt19937{ std::random_device{}() }
+            );
+            auto x = pair[0].first;
+            auto y = pair[0].second;
+
+            // remove {x, y} from the list of empty tiles
+            removeEmptyTile(x, y);
+
             board[x][y] = value;
         }
     };
