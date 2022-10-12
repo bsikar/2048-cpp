@@ -1,6 +1,6 @@
 #include "game/game.h"
 
-int main(void) {
+int main() {
     Game::MainWindow window;
 
     return window.play();
