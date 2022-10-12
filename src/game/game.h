@@ -1,3 +1,4 @@
+#pragma once
 #include <FL/Fl.H>
 #include <array>
 #include <FL/fl_draw.H>
@@ -37,12 +38,43 @@ namespace Game {
 
         int play() {
             show();
-            spawn();
+            spawnTile();
             return Fl::run();
         }
 
     private:
         std::array<std::array<int, GRID_SIZE>, GRID_SIZE> board = {{{0}}};
+
+        int handle(int event) override {
+            if (event == FL_KEYDOWN) {
+                auto key = Fl::event_key();
+                if (key == FL_Up) {
+                    moveUp();
+                } else if (key == FL_Down) {
+                    moveDown();
+                } else if (key == FL_Left) {
+                    moveLeft();
+                } else if (key == FL_Right) {
+                    moveRight();
+                }
+            }
+            // 0 will end the program
+            return 1;
+        }
+
+        void moveUp() {
+            spawnTile();
+            redraw();
+        }
+
+        void moveDown() {
+        }
+
+        void moveLeft() {
+        }
+
+        void moveRight() {
+        }
 
         void draw() override {
             for (int i = 0; i < GRID_SIZE; ++i) {
@@ -98,10 +130,15 @@ namespace Game {
             }
         }
 
-        void spawn() {
+        void spawnTile() {
             int x = rand() % GRID_SIZE;
             int y = rand() % GRID_SIZE;
             int value = rand() % 2 == 0 ? 2 : 4;
+            // if the tile is already occupied, try again
+            if (board[x][y] != 0) {
+                spawnTile();
+                return;
+            }
             board[x][y] = value;
         }
     };
