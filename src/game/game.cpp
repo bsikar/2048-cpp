@@ -2,6 +2,9 @@
 
 Game::MainWindow::MainWindow() : Fl_Window(WIDTH, HEIGHT, "2048") {
     color(BACKGROUND_COLOR);
+}
+
+Game::Logic::Logic() {
     // fill emptyTiles
     for (auto i = 0; i < GRID_ROWS; i++) {
         for (auto j = 0; j < GRID_COLS; j++) {
@@ -25,19 +28,19 @@ int Game::MainWindow::handle(int event) {
     }
 
     if (Fl::event_key() == FL_Up) {
-        moveUp();
+        logic.moveUp();
     } else if (Fl::event_key() == FL_Down) {
-        moveDown();
+        logic.moveDown();
     } else if (Fl::event_key() == FL_Left) {
-        moveLeft();
+        logic.moveLeft();
     } else if (Fl::event_key() == FL_Right) {
-        moveRight();
+        logic.moveRight();
     }
 
     return 1;
 }
 
-void Game::MainWindow::moveUp() {
+void Game::Logic::moveUp() {
     for (auto col = 0; col < GRID_COLS; ++col) {
         for (auto row = 0; row < GRID_ROWS; ++row) {
             if (board[row][col] == 0) {
@@ -59,10 +62,9 @@ void Game::MainWindow::moveUp() {
     }
 
     spawnTile();
-    redraw();
 }
 
-void Game::MainWindow::moveDown() {
+void Game::Logic::moveDown() {
     for (auto col = 0; col < GRID_COLS; ++col) {
         for (auto row = GRID_ROWS - 1; row >= 0; --row) {
             if (board[row][col] == 0) {
@@ -84,10 +86,9 @@ void Game::MainWindow::moveDown() {
     }
 
     spawnTile();
-    redraw();
 }
 
-void Game::MainWindow::moveLeft() {
+void Game::Logic::moveLeft() {
     for (auto row = 0; row < GRID_ROWS; ++row) {
         for (auto col = 0; col < GRID_COLS; ++col) {
             if (board[row][col] == 0) {
@@ -109,10 +110,9 @@ void Game::MainWindow::moveLeft() {
     }
 
     spawnTile();
-    redraw();
 }
 
-void Game::MainWindow::moveRight() {
+void Game::Logic::moveRight() {
     for (auto row = 0; row < GRID_ROWS; ++row) {
         for (auto col = GRID_COLS - 1; col >= 0; --col) {
             if (board[row][col] == 0) {
@@ -134,10 +134,9 @@ void Game::MainWindow::moveRight() {
     }
 
     spawnTile();
-    redraw();
 }
 
-void Game::MainWindow::spawnTile() {
+void Game::Logic::spawnTile() {
     for (auto row = 0; row < GRID_ROWS; ++row) {
         for (auto col = 0; col < GRID_COLS; ++col) {
             if (board[row][col] == 0) {
@@ -169,7 +168,7 @@ void Game::MainWindow::spawnTile() {
 
 void Game::MainWindow::draw() {
     Fl_Window::draw();
-    printBoard();
+    logic.printBoard();
     for (int i = 0; i < GRID_ROWS; i++) {
         for (int j = 0; j < GRID_COLS; j++) {
             drawTile(i, j);
@@ -179,7 +178,7 @@ void Game::MainWindow::draw() {
 }
 
 void Game::MainWindow::drawTile(int i, int j) {
-    auto boardValue = board[i][j];
+    auto boardValue = logic.board[i][j];
     if (boardValue == 0) {
         return;
     }
@@ -224,7 +223,7 @@ void Game::MainWindow::drawGrid() {
     }
 }
 
-void Game::MainWindow::printBoard() {
+void Game::Logic::printBoard() {
     for (auto i = 0; i < GRID_ROWS; i++) {
         for (auto j = 0; j < GRID_COLS; j++) {
             std::cout << std::setw(4) << board[i][j] << " ";

@@ -35,16 +35,12 @@ const std::array<Fl_Color, 11> TILE_COLORS = {
 
 
 namespace Game {
-    class MainWindow : public Fl_Window {
+    class Logic {
     public:
-        MainWindow();
-        int play();
-
-    private:
         std::array<std::array<int, GRID_COLS>, GRID_ROWS> board = {{{0}}};
         std::vector<std::pair<int, int>> emptyTiles;
 
-        int handle(int event) override;
+        Logic();
         void moveUp();
         void moveDown();
         void moveLeft();
@@ -52,10 +48,20 @@ namespace Game {
         void printBoard();
         void removeEmptyTile(int, int);
         void addEmptyTile(int, int);
-        void draw() override;
-        void drawTile(int, int);
-        void drawGrid();
         void spawnTile();
+    };
+
+    class MainWindow : public Fl_Window {
+    public:
+        MainWindow();
+        int play();
+
+    private:
+        Logic logic;
+        int handle(int event) override;
+        void draw() override;
+        void drawGrid();
+        void drawTile(int, int);
     };
 }
 

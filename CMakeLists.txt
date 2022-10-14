@@ -8,3 +8,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Projects
 add_subdirectory(src)
+add_subdirectory(tests)
+
+# Testing
+enable_testing()
