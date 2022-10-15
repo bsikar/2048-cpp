@@ -1,4 +1,4 @@
-#include "game/game.h"
+#include "game/window.h"
 
 int main() {
     Game::MainWindow window;
