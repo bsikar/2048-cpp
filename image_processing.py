@@ -158,24 +158,25 @@ class ImageProcessing:
         row2 = sorted(row2, key=lambda x: x[1])
         row3 = sorted(row3, key=lambda x: x[1])
         row4 = sorted(row4, key=lambda x: x[1])
-
-        # mark row1
-        for i, (r1, r2, r3, r4) in enumerate(zip(row1, row2, row3, row4)):
-            row1_color = (0, 0, 255)
-            row2_color = (0, 255, 0)
-            row3_color = (255, 0, 0)
-            row4_color = (255, 255, 0)
-            cv2.circle(self.image, (int(r1[0]), int(r1[1])), 10, row1_color, -1)
-            cv2.circle(self.image, (int(r2[0]), int(r2[1])), 10, row2_color, -1)
-            cv2.circle(self.image, (int(r3[0]), int(r3[1])), 10, row3_color, -1)
-            cv2.circle(self.image, (int(r4[0]), int(r4[1])), 10, row4_color, -1)
-            cv2.imshow(name + str(i), self.image)
+        centers = []
+        for row in zip(row1, row2, row3, row4):
+            for center in row:
+                centers.append(center)
 
         if show_images:
-            for i, contour in enumerate(contours):
-                cv2.drawContours(self.image, [contour], -1, (0, 255, 0), 3)
-                cv2.imshow(name + str(i), self.image)
-        return contours
+            for i, center in enumerate(centers):
+                cv2.putText(
+                    self.image,
+                    str(i),
+                    (int(center[0]), int(center[1])),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (125, 125, 125),
+                    2,
+                )
+                cv2.imshow(name, self.image)
+
+        return centers
 
     def wait_for_key(self):
         """Wait for key press"""

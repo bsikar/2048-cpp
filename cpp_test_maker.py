@@ -22,6 +22,6 @@ for image in images:
     merged_contours = image_process.merge_similar_contours(similar_contours)
 
     # sort contours
-    sorted_contours = image_process.sort_contours(merged_contours, show_images=False)
+    sorted_contours = image_process.sort_contours(merged_contours, show_images=True)
 
     image_process.wait_for_key()
