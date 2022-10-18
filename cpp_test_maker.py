@@ -1,26 +1,34 @@
 # reference: https://maker.pro/raspberry-pi/tutorial/grid-detection-with-opencv-on-raspberry-pi
-# reference: https://stackoverflow.com/questions/9413216/simple-digit-recognition-ocr-in-opencv-python
+from statistics import median
 import cv2
 import numpy as np
 import pytesseract
+import os
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# if on windows
+if os.name == "nt":
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 # Read image
 image = cv2.imread("board.png")
-cv2.imshow("Image", image)
+# cv2.imshow("Image", image)
+
+# increase contrast so that the grid lines are more visible
+alpha = 1.5  # Contrast control (1.0-3.0)
+beta = 0  # Brightness control (0-100)
+image = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
 
 # We don't need color information, so convert to grayscale
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-cv2.imshow("gray", gray)
+# cv2.imshow("gray", gray)
 
 # Blur the image to reduce noise
 blur = cv2.GaussianBlur(gray, (5, 5), 0)
-cv2.imshow("blur", blur)
+# cv2.imshow("blur", blur)
 
 # Apply adaptive thresholding to get a binary image
 thresh = cv2.adaptiveThreshold(blur, 255, 1, 1, 11, 2)
-cv2.imshow("thresh", thresh)
+# cv2.imshow("thresh", thresh)
 
 # Find contours
 contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -29,6 +37,7 @@ contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 # this is the outer border of the board
 max_area = 0
 c = 0
+best_cnt = contours[0]
 for i in contours:
     # calculate the area of each contour
     area = cv2.contourArea(i)
@@ -40,7 +49,7 @@ for i in contours:
             image = cv2.drawContours(image, contours, c, (0, 255, 0), 3)
     c += 1
 
-cv2.imshow("contours", image)
+# cv2.imshow("contours", image)
 
 """ create a mask with the biggest contour (c)
     the next thing to create is a mask image
@@ -49,7 +58,7 @@ cv2.imshow("contours", image)
 mask = np.zeros((gray.shape), np.uint8)
 cv2.drawContours(mask, [best_cnt], 0, 255, -1)
 cv2.drawContours(mask, [best_cnt], 0, 0, 2)
-cv2.imshow("mask", mask)
+# cv2.imshow("mask", mask)
 
 """ We create another image that is the same
     as the one we are processing and
@@ -64,105 +73,89 @@ out = np.zeros_like(gray)
 # this will be used as an index to copy the pixels
 # from gray to out
 out[mask == 255] = gray[mask == 255]
-cv2.imshow("New image", out)
+# cv2.imshow("New image", out)
 
 # Apply blur to the image to reduce noise
 blur = cv2.GaussianBlur(out, (5, 5), 0)
-cv2.imshow("blur1", blur)
+# cv2.imshow("blur1", blur)
 
 # Apply adaptive thresholding to get a binary image
 thresh = cv2.adaptiveThreshold(blur, 255, 1, 1, 11, 2)
-cv2.imshow("thresh1", thresh)
+# cv2.imshow("thresh1", thresh)
 
 # Find contours again, but this time on the inside of the board
 contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
 masks = []
-for c, i in enumerate(contours):
-    area = cv2.contourArea(i)
-    # if the area is too small, it is probably just noise (or in this case a number)
-    if area > 1000 / 2:
-        # cv2.drawContours(image, contours, c, (0, 255, 0), 3)
-        # create a mask for the contour
-        mask = np.zeros((gray.shape), np.uint8)
-        cv2.drawContours(mask, [i], 0, 255, -1)
-        cv2.drawContours(mask, [i], 0, 0, 2)
+# keep only the contours that are inside the outer border
+for cnt in contours:
+    # create a mask for the contour
+    mask = np.zeros((gray.shape), np.uint8)
+    cv2.drawContours(mask, [cnt], 0, 255, -1)
+    # calculate percentage of non-zero pixels in the mask
+    # if it is inside the board, it should be > 50%
+    # if it is outside the board, it will be < 50%
+    p = cv2.countNonZero(mask) / mask.size
+    if p < 0.5 and p > 0.025:
         masks.append(mask)
 
-# coordinates in [(x1, y1, x2, y2), ...] format
-coordinates = []
+# if the coordinates of 2 contours are close, they are probably the same
+# so we will merge them
+for i in range(len(masks)):
+    for j in range(i + 1, len(masks)):
+        if np.sum(masks[i] & masks[j]) > 0:
+            masks[i] = masks[i] | masks[j]
+            masks[j] = np.zeros((gray.shape), np.uint8)
+# remove empty masks
+masks = [m for m in masks if np.count_nonzero(m) > 0]
+
+# rotate the masks counter-clockwise by 90 degrees 2 times
+# this is because the masks are in the wrong orientation
+masks = [np.rot90(m) for m in masks]
+masks = [np.rot90(m) for m in masks]
+
+# for each mask, write the index of the cell on it
 for i, mask in enumerate(masks):
-    # find the coordinates of the grid
-    # we do this by finding the min and max x and y values
-    # that are not 0
-    ys, xs = np.nonzero(mask)
-    x1, x2 = xs.min(), xs.max()
-    y1, y2 = ys.min(), ys.max()
-    coordinates.append((x1, y1, x2, y2))
+    # find the center of the contour
+    M = cv2.moments(mask)
+    cX = int(M["m10"] / M["m00"])
+    cY = int(M["m01"] / M["m00"])
+    # write the index
+    cv2.putText(image, str(i), (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2)
 
-# sort the coordinates from left to right
-# and remove the first element (the outer border)
-# and the second element (the inner border)
-coordinates = sorted(coordinates, key=lambda x: x[0])
-coordinates = coordinates[2:]
+# for each mask, mark a rectangle on the original image
+for mask in masks:
+    # find the bounding rectangle of the contour
+    x, y, w, h = cv2.boundingRect(mask)
+    # draw the rectangle on the original image
+    cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 255), 2)
 
-# check for similar coordinates and merge them
-new_cords = []
-for i, coord in enumerate(coordinates):
-    x1, y1, x2, y2 = coord
-    for j, coord2 in enumerate(coordinates):
-        x3, y3, x4, y4 = coord2
-        if x1 < x3 < x2 and y1 < y3 < y2:
-            x1, y1, x2, y2 = min(x1, x3), min(y1, y3), max(x2, x4), max(y2, y4)
-            new_cords.append((x1, y1, x2, y2))
+# for each mask, find the number inside it
+numbers = []
+for mask in masks:
+    # find the bounding rectangle of the contour
+    x, y, w, h = cv2.boundingRect(mask)
+    # crop the image to the bounding rectangle
+    crop = out[y : y + h, x : x + w]
+    string = pytesseract.image_to_string(crop, config="--psm 10")
+    numbers.append(string)
 
-# remove duplicates
-coordinates = list(set(coordinates) - set(new_cords))
+for i, number in enumerate(numbers):
+    number = [x for x in number if x.isdigit()]
+    if len(number) > 0:
+        number = int("".join(number))
+        numbers[i] = number
+    else:
+        numbers[i] = 0
 
-values = []
-# draw the coordinates on the image
-for x1, y1, x2, y2 in coordinates:
-    # create a mask inside the coordinate
-    mask = np.zeros((gray.shape), np.uint8)
-    cv2.rectangle(mask, (x1, y1), (x2, y2), 255, -1)
-    cv2.rectangle(mask, (x1, y1), (x2, y2), 0, 2)
-    inside_img = np.zeros_like(gray)
-    inside_img[mask == 255] = gray[mask == 255]
-    # blur the image to reduce noise
-    inside_img = cv2.GaussianBlur(inside_img, (5, 5), 0)
-    # apply adaptive thresholding to get a binary image
-    inside_img = cv2.adaptiveThreshold(inside_img, 255, 1, 1, 11, 2)
-    # find contours
-    contours, _ = cv2.findContours(inside_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+numbers = np.array(numbers).reshape(4, 4)
+# format this like a c++ array when printing
+# by using '{' and '}' instead of '[' and ']'
+# and by adding a comma after each element
+string_array = np.array2string(numbers, separator=", ").replace("[", "{").replace("]", "}")
+print(f"{{{string_array}}}")
 
-    digit = 0
-    if (cv2.countNonZero(inside_img) / inside_img.size) * 10000 > 90:
-        [x, y, w, h] = cv2.boundingRect(contours[0])
-        if h > 28:
-            cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            roi = inside_img[y : y + h, x : x + w]
-            roismall = cv2.resize(roi, (10, 10))
-            roismall = roismall.reshape((1, 100))
-            roismall = np.float32(roismall)
-            text = pytesseract.image_to_string(roi, config="--psm 6")
-            # find the digits in text
-            digit = ""
-            for i in text:
-                if i.isdigit():
-                    digit += i
-                    break
-            digit = int(digit)
-
-    values.append(digit)
-    # there should be a number inside this contour
-    # find the number and append it to the values list
-
-    cv2.rectangle(image, (x1, y1), (x2, y2), (100, 100, 100), 2)
-# make values into a 4x4 array
-values = np.array(values).reshape((4, 4))
-print(values)
-
-
-cv2.imshow("Final Image", image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# show the image
+# cv2.imshow("image", image)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
