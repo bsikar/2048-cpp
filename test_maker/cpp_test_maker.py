@@ -53,7 +53,7 @@ class CppTestMaker:
     def process_image(self, image, quiet=False):
         if not quiet:
             print(f"Processing '{image}' ...")
-        processor = ImageProcessor()
+        processor = ImageProcessor(show_images=(not quiet))
         processor.load_image(image)
         numbers = processor.get_list()
         return (

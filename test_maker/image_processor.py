@@ -226,6 +226,9 @@ class ImageProcessor:
         # find numbers
         numbers = self.find_numbers_in_contours(sorted_contours)
 
+        if self.show_images:
+            self.wait_for_key()
+
         return numbers
 
     def wait_for_key(self):
