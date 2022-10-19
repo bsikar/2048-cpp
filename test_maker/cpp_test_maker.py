@@ -3,7 +3,7 @@ from image_processor import ImageProcessor
 import numpy as np
 
 TEST_TEMPLATE = """
-TEST(Test1, Move{PYTHON_MOVE}-{CPP_MOVE}) {{
+TEST(Test1, Move{PYTHON_MOVE}{CPP_MOVE}) {{
     Logic logic = Logic();
 
 
@@ -51,8 +51,9 @@ class CppTestMaker:
             else:
                 self.sorted_images.sort(key=lambda x: int(x[0].split("/")[-2].split(" ")[-1]))
 
-    def process_image(self, image):
-        print(f"Processing '{image}' ...")
+    def process_image(self, image, quiet=False):
+        if not quiet:
+            print(f"Processing '{image}' ...")
         processor = ImageProcessor()
         processor.load_image(image)
         numbers = processor.get_list()
@@ -83,6 +84,6 @@ class CppTestMaker:
 if __name__ == "__main__":
     cpp_test_maker = CppTestMaker("tests")
     for image in cpp_test_maker.sorted_images:
-        before = cpp_test_maker.process_image(image[0])
-        after = cpp_test_maker.process_image(image[1])
+        before = cpp_test_maker.process_image(image[0], quiet=True)
+        after = cpp_test_maker.process_image(image[1], quiet=True)
         print(cpp_test_maker.make_test(image, before, after))
