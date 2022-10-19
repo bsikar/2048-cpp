@@ -8,13 +8,13 @@ TEST(Test1, Move{PYTHON_MOVE}{CPP_MOVE}) {{
 
 
     logic.board = {{
-    {PYTHON_BEFORE}
+{PYTHON_BEFORE}
     }};
 
     logic.move{PYTHON_MOVE}();
 
     std::array<std::array<int, GRID_COLS>, GRID_ROWS> board = {{
-    {PYTHON_AFTER}
+{PYTHON_AFTER}
     }};
 
     ASSERT_EQ(logic.board, board);
@@ -63,7 +63,7 @@ class CppTestMaker:
             .replace("]", "}")
             .replace("{{", "{")
             .replace("}}", "}")
-            .replace("{", "\t{")
+            .replace("{", "\t\t{")
         )
 
     def make_test(self, image, start_list, end_list):
