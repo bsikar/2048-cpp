@@ -6,7 +6,6 @@ TEST_TEMPLATE = """
 TEST(Test1, Move{PYTHON_MOVE}{CPP_MOVE}) {{
     Logic logic = Logic();
 
-
     logic.board = {{
 {PYTHON_BEFORE}
     }};
