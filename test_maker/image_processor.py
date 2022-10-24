@@ -225,8 +225,13 @@ class ImageProcessor:
                 cv2.imshow(f"Gray {i}", gray)
 
             word = pytesseract.image_to_string(
-                gray, config="-c tessedit_char_whitelist=012345678 --oem 3 --psm 6"
+                gray, config="-c tessedit_char_whitelist=0123456789 --oem 3 --psm 6"
             )
+            # my 8's are being read as 3's, so I'm replacing them
+            word = word.replace("3", "8")
+            # if the word was 32 though then it would have been replaced to 82
+            # so I'm replacing it back
+            word = word.replace("82", "32")
             word = [x for x in word if x.isdigit()]
             word = "".join(word)
             numbers.append(int(word) if word else 0)
