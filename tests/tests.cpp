@@ -8,8 +8,8 @@ TEST(Test1, MoveDown1) {
 
     logic.board = {{
 		{0, 0, 0, 0},
- 		{0, 0, 0, 0},
- 		{0, 0, 0, 0},
+ 		{0, 0, 2, 0},
+ 		{2, 0, 0, 0},
  		{0, 0, 0, 0}
     }};
 
@@ -19,7 +19,7 @@ TEST(Test1, MoveDown1) {
 		{0, 0, 0, 0},
  		{0, 0, 0, 0},
  		{0, 0, 0, 0},
- 		{0, 0, 0, 0}
+ 		{2, 0, 2, 0}
     }};
 
     ASSERT_EQ(logic.board, board);
@@ -31,18 +31,18 @@ TEST(Test1, MoveLeft2) {
 
     logic.board = {{
 		{0, 0, 0, 0},
- 		{0, 0, 7, 0},
+ 		{0, 0, 4, 0},
  		{0, 0, 0, 0},
- 		{0, 0, 0, 0}
+ 		{2, 0, 2, 0}
     }};
 
     logic.moveLeft();
 
     std::array<std::array<int, GRID_COLS>, GRID_ROWS> board = {{
 		{0, 0, 0, 0},
- 		{7, 0, 0, 0},
+ 		{4, 0, 0, 0},
  		{0, 0, 0, 0},
- 		{7, 0, 0, 0}
+ 		{4, 0, 0, 0}
     }};
 
     ASSERT_EQ(logic.board, board);
@@ -54,17 +54,17 @@ TEST(Test1, MoveUp3) {
 
     logic.board = {{
 		{0, 0, 0, 0},
- 		{7, 0, 0, 0},
- 		{0, 0, 0, 0},
- 		{7, 0, 0, 0}
+ 		{4, 0, 0, 0},
+ 		{2, 0, 0, 0},
+ 		{4, 0, 0, 0}
     }};
 
     logic.moveUp();
 
     std::array<std::array<int, GRID_COLS>, GRID_ROWS> board = {{
-		{7, 0, 0, 0},
- 		{0, 0, 0, 0},
- 		{7, 0, 0, 0},
+		{4, 0, 0, 0},
+ 		{2, 0, 0, 0},
+ 		{4, 0, 0, 0},
  		{0, 0, 0, 0}
     }};
 
@@ -76,18 +76,18 @@ TEST(Test1, MoveRight4) {
     Logic logic = Logic();
 
     logic.board = {{
-		{7, 0, 0, 0},
- 		{0, 0, 0, 0},
- 		{7, 0, 0, 0},
+		{4, 0, 2, 0},
+ 		{2, 0, 0, 0},
+ 		{4, 0, 0, 0},
  		{0, 0, 0, 0}
     }};
 
     logic.moveRight();
 
     std::array<std::array<int, GRID_COLS>, GRID_ROWS> board = {{
-		{0, 0, 7, 0},
- 		{0, 0, 0, 0},
- 		{0, 0, 0, 7},
+		{0, 0, 4, 2},
+ 		{0, 0, 0, 2},
+ 		{0, 0, 0, 4},
  		{0, 0, 0, 0}
     }};
 
@@ -99,18 +99,18 @@ TEST(Test1, MoveRight5) {
     Logic logic = Logic();
 
     logic.board = {{
-		{0, 0, 7, 0},
- 		{0, 0, 0, 0},
- 		{0, 0, 0, 7},
+		{0, 0, 4, 2},
+ 		{0, 2, 0, 2},
+ 		{0, 0, 0, 4},
  		{0, 0, 0, 0}
     }};
 
     logic.moveRight();
 
     std::array<std::array<int, GRID_COLS>, GRID_ROWS> board = {{
-		{0, 0, 7, 0},
- 		{0, 0, 0, 7},
- 		{0, 0, 0, 7},
+		{0, 0, 4, 2},
+ 		{0, 0, 0, 4},
+ 		{0, 0, 0, 4},
  		{0, 0, 0, 0}
     }};
 
@@ -122,10 +122,10 @@ TEST(Test1, MoveDown6) {
     Logic logic = Logic();
 
     logic.board = {{
-		{0, 0, 7, 0},
- 		{0, 0, 0, 7},
- 		{0, 0, 0, 7},
- 		{0, 0, 0, 0}
+		{0, 0, 4, 2},
+ 		{0, 0, 0, 4},
+ 		{0, 0, 0, 4},
+ 		{0, 0, 2, 0}
     }};
 
     logic.moveDown();
@@ -133,8 +133,8 @@ TEST(Test1, MoveDown6) {
     std::array<std::array<int, GRID_COLS>, GRID_ROWS> board = {{
 		{0, 0, 0, 0},
  		{0, 0, 0, 0},
- 		{0, 0, 7, 0},
- 		{0, 0, 0, 8}
+ 		{0, 0, 4, 2},
+ 		{0, 0, 2, 3}
     }};
 
     ASSERT_EQ(logic.board, board);
@@ -147,15 +147,15 @@ TEST(Test1, MoveUp7) {
     logic.board = {{
 		{0, 0, 0, 0},
  		{0, 0, 0, 0},
- 		{0, 0, 7, 0},
- 		{0, 0, 0, 8}
+ 		{2, 0, 4, 2},
+ 		{0, 0, 2, 3}
     }};
 
     logic.moveUp();
 
     std::array<std::array<int, GRID_COLS>, GRID_ROWS> board = {{
-		{0, 0, 7, 0},
- 		{0, 0, 0, 8},
+		{2, 0, 4, 2},
+ 		{0, 0, 2, 3},
  		{0, 0, 0, 0},
  		{0, 0, 0, 0}
     }};
@@ -168,17 +168,17 @@ TEST(Test1, MoveUp8) {
     Logic logic = Logic();
 
     logic.board = {{
-		{0, 0, 7, 0},
- 		{0, 0, 0, 8},
+		{2, 0, 4, 2},
+ 		{0, 0, 2, 3},
  		{0, 0, 0, 0},
- 		{0, 0, 0, 0}
+ 		{2, 0, 0, 0}
     }};
 
     logic.moveUp();
 
     std::array<std::array<int, GRID_COLS>, GRID_ROWS> board = {{
-		{7, 0, 7, 0},
- 		{0, 0, 0, 8},
+		{4, 0, 4, 2},
+ 		{0, 0, 2, 3},
  		{0, 0, 0, 0},
  		{0, 0, 0, 0}
     }};
@@ -191,19 +191,19 @@ TEST(Test1, MoveRight9) {
     Logic logic = Logic();
 
     logic.board = {{
-		{7, 0, 7, 0},
- 		{0, 0, 0, 8},
+		{4, 0, 4, 2},
+ 		{0, 0, 2, 3},
  		{0, 0, 0, 0},
- 		{0, 0, 0, 0}
+ 		{0, 2, 0, 0}
     }};
 
     logic.moveRight();
 
     std::array<std::array<int, GRID_COLS>, GRID_ROWS> board = {{
-		{0, 0, 8, 0},
- 		{0, 0, 0, 8},
+		{0, 0, 3, 2},
+ 		{0, 0, 2, 3},
  		{0, 0, 0, 0},
- 		{0, 0, 0, 0}
+ 		{0, 0, 0, 2}
     }};
 
     ASSERT_EQ(logic.board, board);
@@ -214,19 +214,19 @@ TEST(Test1, MoveDown10) {
     Logic logic = Logic();
 
     logic.board = {{
-		{0, 0, 8, 0},
- 		{0, 0, 0, 8},
- 		{0, 0, 0, 0},
- 		{0, 0, 0, 0}
+		{0, 0, 3, 2},
+ 		{0, 0, 2, 3},
+ 		{0, 0, 0, 2},
+ 		{0, 0, 0, 2}
     }};
 
     logic.moveDown();
 
     std::array<std::array<int, GRID_COLS>, GRID_ROWS> board = {{
 		{0, 0, 0, 0},
- 		{0, 0, 0, 0},
- 		{0, 0, 8, 8},
- 		{0, 0, 0, 7}
+ 		{0, 0, 0, 2},
+ 		{0, 0, 3, 3},
+ 		{0, 0, 2, 4}
     }};
 
     ASSERT_EQ(logic.board, board);
@@ -238,18 +238,18 @@ TEST(Test1, MoveLeft11) {
 
     logic.board = {{
 		{0, 0, 0, 0},
- 		{0, 0, 0, 0},
- 		{0, 0, 8, 8},
- 		{0, 0, 0, 7}
+ 		{2, 0, 0, 2},
+ 		{0, 0, 3, 3},
+ 		{0, 0, 2, 4}
     }};
 
     logic.moveLeft();
 
     std::array<std::array<int, GRID_COLS>, GRID_ROWS> board = {{
 		{ 0,  0,  0,  0},
- 		{ 7,  0,  0,  0},
+ 		{ 4,  0,  0,  0},
  		{16,  0,  0,  0},
- 		{ 0,  7,  0,  0}
+ 		{ 2,  4,  0,  0}
     }};
 
     ASSERT_EQ(logic.board, board);

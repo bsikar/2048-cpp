@@ -7,7 +7,9 @@ import os
 
 # if on windows
 if os.name == "nt":
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    pytesseract.pytesseract.tesseract_cmd = (
+        r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    )
 
 
 class ImageProcessor:
@@ -33,7 +35,7 @@ class ImageProcessor:
             cv2.imshow(name, image)
         return image
 
-    def convert_to_gray(self, image, name="Grayscale", show_images=None):
+    def convert_to_grayscale(self, image, name="Grayscale", show_images=None):
         """Convert image to grayscale"""
         if show_images is None:
             show_images = self.show_images
@@ -55,7 +57,9 @@ class ImageProcessor:
         """Threshold image"""
         if show_images is None:
             show_images = self.show_images
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        image = cv2.adaptiveThreshold(
+            image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+        )
         if show_images:
             cv2.imshow(name, image)
         return image
@@ -64,20 +68,28 @@ class ImageProcessor:
         """Find contours"""
         if show_images is None:
             show_images = self.show_images
-        contours, hierarchy = cv2.findContours(image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(
+            image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+        )
+        """
         if show_images:
             cv2.drawContours(self.image, contours, -1, (0, 255, 0), 3)
             cv2.imshow(name, self.image)
+        """
         return contours
 
-    def find_largest_contour(self, image, contours, name="Largest Contour", show_images=None):
+    def find_largest_contour(
+        self, image, contours, name="Largest Contour", show_images=None
+    ):
         """Find largest contour"""
         if show_images is None:
             show_images = self.show_images
         largest_contour = max(contours, key=cv2.contourArea)
+        """
         if show_images:
             cv2.drawContours(self.image, largest_contour, -1, (0, 255, 0), 3)
             cv2.imshow(name, image)
+        """
         return largest_contour
 
     def create_mask(self, image, contour, name="Mask", show_images=None):
@@ -90,7 +102,9 @@ class ImageProcessor:
             cv2.imshow(name, mask)
         return mask
 
-    def find_similar_contours(self, image, contours, name="Similar Contours", show_images=None):
+    def find_similar_contours(
+        self, image, contours, name="Similar Contours", show_images=None
+    ):
         """Find similar contours"""
         if show_images is None:
             show_images = self.show_images
@@ -99,23 +113,31 @@ class ImageProcessor:
             area = cv2.contourArea(contour)
             if area > 1000:
                 similar_contours.append(contour)
+        """
         if show_images:
             for i, contour in enumerate(similar_contours):
                 cv2.drawContours(self.image, [contour], -1, (0, 255, 0), 3)
                 cv2.imshow(name + str(i), self.image)
+        """
         return similar_contours
 
-    def merge_contours(self, contour1, countour2, name="Merged Contours", show_images=None):
+    def merge_contours(
+        self, contour1, countour2, name="Merged Contours", show_images=None
+    ):
         """Merge contours"""
         if show_images is None:
             show_images = self.show_images
         merged_contours = np.concatenate((contour1, countour2), axis=0)
+        """
         if show_images:
             cv2.drawContours(self.image, merged_contours, -1, (0, 255, 0), 3)
             cv2.imshow(name, self.image)
+        """
         return merged_contours
 
-    def merge_similar_contours(self, similar_contours, name="Merged Similar Contours", show_images=None):
+    def merge_similar_contours(
+        self, similar_contours, name="Merged Similar Contours", show_images=None
+    ):
         """Merge similar contours"""
         if show_images is None:
             show_images = self.show_images
@@ -129,10 +151,12 @@ class ImageProcessor:
         # remove the contours that are too small
         similar_contours = [c for c in similar_contours if cv2.contourArea(c) > 5000]
 
+        """
         if show_images:
             for i, contour in enumerate(similar_contours):
                 cv2.drawContours(self.image, [contour], -1, (0, 255, 0), 3)
                 cv2.imshow(name + str(i), self.image)
+        """
 
         return similar_contours
 
@@ -166,6 +190,7 @@ class ImageProcessor:
             for center in row:
                 centers.append(center)
 
+        """
         if show_images:
             for i, center in enumerate(centers):
                 cv2.putText(
@@ -178,18 +203,34 @@ class ImageProcessor:
                     2,
                 )
                 cv2.imshow(name, self.image)
+        """
 
         return [x[1] for x in centers]
 
-    def find_numbers_in_contours(self, contours, name="Numbers in Contours", show_images=None):
+    def find_numbers_in_contours(
+        self, contours, name="Numbers in Contours", show_images=None
+    ):
+        if show_images is None:
+            show_images = self.show_images
+
         numbers = []
-        for contour in contours:
+        for i, contour in enumerate(contours):
             x, y, w, h = cv2.boundingRect(contour)
             roi = self.image[y : y + h, x : x + w]
-            word = pytesseract.image_to_string(roi, config="--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789")
+            # i found that pytesseract works better with a gray image than a binary image
+            gray = self.convert_to_grayscale(roi)
+
+            if show_images:
+                cv2.imshow(f"ROI {i}", roi)
+                cv2.imshow(f"Gray {i}", gray)
+
+            word = pytesseract.image_to_string(
+                gray, config="-c tessedit_char_whitelist=012345678 --oem 3 --psm 6"
+            )
             word = [x for x in word if x.isdigit()]
             word = "".join(word)
             numbers.append(int(word) if word else 0)
+
         if show_images:
             for i, number in enumerate(numbers):
                 cv2.putText(
@@ -201,13 +242,14 @@ class ImageProcessor:
                     (125, 125, 125),
                     2,
                 )
-                cv2.imshow(name, self.image)
+                # cv2.imshow(f"{name}{number}{i}", self.image)
+            cv2.imshow(name, self.image)
         return np.array(numbers).reshape(4, 4)
 
     def get_list(self):
         # pre-process image
         increased_contrast = self.increase_contrast(self.image)
-        grayscale = self.convert_to_gray(increased_contrast)
+        grayscale = self.convert_to_grayscale(increased_contrast)
         blur = self.blur_image(grayscale)
         threshold = self.threshold_image(blur)
 

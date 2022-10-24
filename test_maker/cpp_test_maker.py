@@ -2,6 +2,11 @@ import os
 from image_processor import ImageProcessor
 import numpy as np
 
+HEADER = """#include <gtest/gtest.h>
+#include "../src/game/logic.h"
+
+using namespace Game;"""
+
 TEST_TEMPLATE = """
 TEST(Test1, Move{PYTHON_MOVE}{CPP_MOVE}) {
     Logic logic = Logic();
@@ -46,9 +51,13 @@ class CppTestMaker:
             self.sorted_images = list(zip(start_images, end_images))
             # sort by the number in 'tests/testNUMBER/*.png'
             if os.name == "nt":
-                self.sorted_images.sort(key=lambda x: int(x[0].split("\\")[-2].split("test")[-1]))
+                self.sorted_images.sort(
+                    key=lambda x: int(x[0].split("\\")[-2].split("test")[-1])
+                )
             else:
-                self.sorted_images.sort(key=lambda x: int(x[0].split("/")[-2].split("test")[-1]))
+                self.sorted_images.sort(
+                    key=lambda x: int(x[0].split("/")[-2].split("test")[-1])
+                )
 
     def process_image(self, image, quiet=False):
         if not quiet:
@@ -81,6 +90,7 @@ class CppTestMaker:
 
 
 if __name__ == "__main__":
+    print(HEADER)
     cpp_test_maker = CppTestMaker("tests")
     for image in cpp_test_maker.sorted_images:
         before = cpp_test_maker.process_image(image[0], quiet=True)
